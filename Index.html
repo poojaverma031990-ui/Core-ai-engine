@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Core AI Engine Terminal Test</title>
+  <style>
+    body {
+      background-color: #0d1117;
+      color: #c9d1d9;
+      font-family: monospace;
+      padding: 15px;
+      margin: 0;
+    }
+    h2 { color: #58a6ff; margin-top: 0; }
+    .control-panel {
+      background: #161b22;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      margin-bottom: 15px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: #fff;
+      border-radius: 4px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    button {
+      background: #238636;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      width: 100%;
+    }
+    button:active { background: #2ea44f; }
+    #terminal {
+      background: #010409;
+      border: 1px solid #30363d;
+      padding: 15px;
+      border-radius: 6px;
+      height: 300px;
+      overflow-y: auto;
+      color: #7ee787;
+      white-space: pre-wrap;
+    }
+    .log-entry { margin-bottom: 5px; }
+    .error-entry { color: #f85149; }
+  </style>
+</head>
+<body>
+
+  <h2>⚡ CoreAIEngine Test Panel</h2>
+  
+  <div class="control-panel">
+    <label>Model Payload URL:</label>
+    <input type="text" id="modelUrl" value="https://beeceptor.com" placeholder="Paste binary model file link here">
+    <button id="bootBtn">Initialize Engine</button>
+  </div>
+
+  <h4>Engine Terminal Logs:</h4>
+  <div id="terminal">--- Ready to Boot ---</div>
+
+  <!-- Include your script file -->
+  <script src="./core-ai.js"></script>
+  <script>
+    const terminal = document.getElementById('terminal');
+    const bootBtn = document.getElementById('bootBtn');
+    const modelUrlInput = document.getElementById('modelUrl');
+
+    // Intercept standard console logs to display inside our HTML terminal
+    const oldLog = console.log;
+    console.log = function(...args) {
+      oldLog.apply(console, args);
+      const text = args.join(' ');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerText = `> ${text}`;
+      terminal.appendChild(entry);
+      terminal.scrollTop = terminal.scrollHeight;
+    };
+
+    // Catch unhandled errors dynamically
+    window.onerror = function(message) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry error-entry';
+      entry.innerText = `[ERROR] ${message}`;
+      terminal.appendChild(entry);
+    };
+
+    bootBtn.addEventListener('click', async () => {
+      const url = modelUrlInput.value.trim();
+      if (!url) {
+        alert('Please provide a valid URL string.');
+        return;
+      }
+      
+      terminal.innerHTML = '';
+      console.log('Spawning CoreAIEngine instance...');
+      
+      try {
+        // Run your single-line client call command
+        const aiEngine = await CoreAIEngine.init({ modelUrl: url });
+        console.log('Success! ArrayBuffer captured size:', aiEngine.byteLength || aiEngine.modelBuffer.byteLength, 'bytes.');
+      } catch (err) {
+        console.log(`Initialization halted: ${err.message}`);
+      }
+    });
+  </script>
+</body>
+</html>
