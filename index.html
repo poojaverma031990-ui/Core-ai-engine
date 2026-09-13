@@ -61,21 +61,20 @@
   
   <div class="control-panel">
     <label>Model Payload URL:</label>
-    <input type="text" id="modelUrl" value="https://beeceptor.com" placeholder="Paste binary model file link here">
+    <input type="text" id="modelUrl" value="" placeholder="Paste binary model file link here or leave empty for mock stream">
     <button id="bootBtn">Initialize Engine</button>
   </div>
 
   <h4>Engine Terminal Logs:</h4>
   <div id="terminal">--- Ready to Boot ---</div>
 
-  <!-- Include your script file -->
-  <script src="./core-ai.js"></script>
-  <script>
+  <script type="module">
+    import CoreAIEngine from './core-ai.js';
+
     const terminal = document.getElementById('terminal');
     const bootBtn = document.getElementById('bootBtn');
     const modelUrlInput = document.getElementById('modelUrl');
 
-    // Intercept standard console logs to display inside our HTML terminal
     const oldLog = console.log;
     console.log = function(...args) {
       oldLog.apply(console, args);
@@ -87,7 +86,6 @@
       terminal.scrollTop = terminal.scrollHeight;
     };
 
-    // Catch unhandled errors dynamically
     window.onerror = function(message) {
       const entry = document.createElement('div');
       entry.className = 'log-entry error-entry';
@@ -96,19 +94,20 @@
     };
 
     bootBtn.addEventListener('click', async () => {
-      const url = modelUrlInput.value.trim();
+      let url = modelUrlInput.value.trim();
+      
       if (!url) {
-        alert('Please provide a valid URL string.');
-        return;
+        url = "https://beeceptor.com";
+        modelUrlInput.value = url;
       }
       
       terminal.innerHTML = '';
-      console.log('Spawning CoreAIEngine instance...');
+      console.log('Spawning CoreAIEngine instance module...');
       
       try {
-        // Run your single-line client call command
         const aiEngine = await CoreAIEngine.init({ modelUrl: url });
-        console.log('Success! ArrayBuffer captured size:', aiEngine.byteLength || aiEngine.modelBuffer.byteLength, 'bytes.');
+        const bufferSize = aiEngine.byteLength || (aiEngine.modelBuffer && aiEngine.modelBuffer.byteLength) || 0;
+        console.log(`Success! ArrayBuffer captured size: ${bufferSize} bytes.`);
       } catch (err) {
         console.log(`Initialization halted: ${err.message}`);
       }
